@@ -540,7 +540,7 @@ class SQLiteStorage(SQLiteMixin):
                 amount = lbc_to_dewies(claim_info['amount'])
                 height = claim_info['height']
                 address = claim_info['address']
-                sequence = claim_info['claim_sequence']
+                sequence = claim_info['claim_sequence'] if 'claim_sequence' in claim_info else -1
                 try:
                     certificate_id = claim_info['value'].get('publisherSignature', {}).get('certificateId')
                 except AttributeError:
@@ -804,11 +804,11 @@ class SQLiteStorage(SQLiteMixin):
 
 # Helper functions
 def _format_claim_response(outpoint, claim_id, name, amount, height, serialized, channel_id, address, claim_sequence):
+    # parameters on this method must match database columns exactly
     r = {
         "name": name,
         "claim_id": claim_id,
         "address": address,
-        "claim_sequence": claim_sequence,
         "value": ClaimDict.deserialize(unhexlify(serialized)).claim_dict,
         "height": height,
         "amount": dewies_to_lbc(amount),
@@ -817,6 +817,8 @@ def _format_claim_response(outpoint, claim_id, name, amount, height, serialized,
         "channel_claim_id": channel_id,
         "channel_name": None
     }
+    if claim_sequence >= 0:
+        r["claim_sequence"] = claim_sequence
     return r
 
 
